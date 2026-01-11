@@ -5,24 +5,25 @@ import { useAuth } from '../auth/AuthProvider';
 import { PrivateRoute } from '../auth/PrivateRoute';
 
 import { SuperAdminLayout } from '../pages/superadmin/components/SuperAdminLayout';
-import { ManagerLayout } from '../pages/manager/components/ManagerLayout';
+import { MemberLayout } from '../pages/member/components/MemberLayout';
+
 import { TechLayout } from '../pages/tech/components/TechLayout';
 
 import { SuperAdminDashboard } from '../pages/superadmin/SuperAdminDashboard';
 import { SuperAdminProfile } from '../pages/superadmin/Profile';
 import { UserManagement } from '../pages/superadmin/UserManagement';
 
-import { ManagerDashboard } from '../pages/manager/ManagerDashboard';
-import { ManagerProfile } from '../pages/manager/Profile';
+
+import { MemberDashboard } from '../pages/member/MemberDashboard';
+import { MemberProfile } from '../pages/member/Profile';
 
 import { TechDashboard } from '../pages/tech/TechDashboard';
 import { TechProfile } from '../pages/tech/Profile';
-import { TechUserManagement } from '../pages/manager/TechUserManagement';
+
 import { ErrorPage } from '../pages/error/ErrorPage';
-import Locates from '../pages/manager/locates/Locates';
-import RMEReports from '../pages/manager/HMIS/RMEReports';
-import RSSReports from '../pages/manager/HMIS/RSSReports';
-import TOSReports from '../pages/manager/HMIS/TOSReports';
+import RMEReports from '../pages/member/HMIS/RMEReports';
+import RSSReports from '../pages/member/HMIS/RSSReports';
+import TOSReports from '../pages/member/HMIS/TOSReports';
 
 
 
@@ -47,7 +48,7 @@ export const AppRoutes = () => {
           element={
             <PrivateRoute>
               {user?.role === 'superadmin' && <Navigate to="/superadmin-dashboard" replace />}
-              {user?.role === 'manager' && <Navigate to="/manager-dashboard" replace />}
+              {user?.role === 'manager' && <Navigate to="/member-dashboard" replace />}
               {user?.role === 'tech' && <Navigate to="/tech-dashboard" replace />}
             </PrivateRoute>
           }
@@ -67,19 +68,17 @@ export const AppRoutes = () => {
           <Route path="profile" element={<SuperAdminProfile />} />
         </Route>
 
-        {/* Manager Routes */}
+        {/* Member Routes */}
         <Route
-          path="/manager-dashboard"
+          path="/member-dashboard"
           element={
-            <PrivateRoute requiredRoles={['manager']}>
-              <ManagerLayout />
+            <PrivateRoute requiredRoles={['member']}>
+              <MemberLayout />
             </PrivateRoute>
           }
         >
-          <Route index element={<ManagerDashboard />} />
-          <Route path="profile" element={<ManagerProfile />} />
-          <Route path="techs" element={<TechUserManagement />} />
-          <Route path="locates" element={<Locates />} />
+          <Route index element={<MemberDashboard />} />
+          <Route path="profile" element={<MemberProfile />} />
 
           {/* Health Department Reports */}
           <Route path="health-department-reports/rme" element={<RMEReports />} />

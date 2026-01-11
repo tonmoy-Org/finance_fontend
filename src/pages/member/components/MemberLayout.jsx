@@ -1,9 +1,10 @@
 import React from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import DashboardLayout from '../../../components/DashboardLayout';
-import { ManagerMenuComponent } from './ManagerMenuComponent';
+import { MemberMenuComponent } from './MemberMenuComponent';
 
-export const ManagerLayout = () => {
+
+export const MemberLayout = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -12,7 +13,7 @@ export const ManagerLayout = () => {
     };
 
 
-    const structuredMenuItems = ManagerMenuComponent({ onMenuItemClick: handleMenuItemClick });
+    const structuredMenuItems = MemberMenuComponent({ onMenuItemClick: handleMenuItemClick });
 
     const getPageTitle = () => {
         const currentPath = location.pathname;
@@ -36,11 +37,11 @@ export const ManagerLayout = () => {
         }
 
         // Fallback titles for common routes
-        if (currentPath === '/manager-dashboard') {
+        if (currentPath === '/member-dashboard') {
             return 'Dashboard';
         }
 
-        return 'Manager Dashboard';
+        return 'নিয়মিত দাতা সদস্য (Regular Donor/Member) Dashboard';
     };
 
     return (

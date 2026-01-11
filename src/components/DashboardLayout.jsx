@@ -159,12 +159,12 @@ export default function DashboardLayout({ children, title, menuItems }) {
     }
 
     // Special handling for dashboard root
-    if (path === '/manager-dashboard' && currentPath === '/manager-dashboard') {
+    if (path === '/member-dashboard' && currentPath === '/member-dashboard') {
       return true;
     }
 
     // For paths that are direct parent of current path
-    if (path !== '/superadmin-dashboard' && path !== '/manager-dashboard' && path !== '/tech-dashboard' && currentPath === path) {
+    if (path !== '/superadmin-dashboard' && path !== '/member-dashboard' && path !== '/tech-dashboard' && currentPath === path) {
       return true;
     }
 

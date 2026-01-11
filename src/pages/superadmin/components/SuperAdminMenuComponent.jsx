@@ -54,11 +54,6 @@ export const SuperAdminMenuComponent = ({ onMenuItemClick }) => {
             sectionName: 'System & Configuration',
             items: [
                 {
-                    text: 'Locations',
-                    icon: <LocationIcon />,
-                    path: '/superadmin-dashboard/locations'
-                },
-                {
                     text: 'Health Department Report Tracking',
                     icon: <HealthIcon />,
                     path: '#',
@@ -86,16 +81,6 @@ export const SuperAdminMenuComponent = ({ onMenuItemClick }) => {
                     text: 'Forms',
                     icon: <FormIcon />,
                     path: '/superadmin-dashboard/forms'
-                },
-                {
-                    text: 'Company Notifications',
-                    icon: <NotificationIcon />,
-                    path: '/superadmin-dashboard/company-notifications'
-                },
-                {
-                    text: 'Reminders',
-                    icon: <ReminderIcon />,
-                    path: '/superadmin-dashboard/reminders'
                 },
             ]
         },
