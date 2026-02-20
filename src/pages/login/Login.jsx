@@ -250,7 +250,7 @@ export const Login = () => {
                 }
               />
 
-              <Link
+              {/* <Link
                 to="/forgot-password"
                 style={{
                   textDecoration: 'none',
@@ -263,7 +263,7 @@ export const Login = () => {
                 }}
               >
                 Forgot password?
-              </Link>
+              </Link> */}
             </Box>
 
             <GradientButton
