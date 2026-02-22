@@ -69,20 +69,19 @@ const downloadTxtFile = (content, filename) => {
     URL.revokeObjectURL(url);
 };
 
+// Returns only raw "phone:password" lines — no headers or comments
 const generateTypeContent = (credentials, type) =>
     credentials
         .filter((cred) => cred.type === type)
         .map((cred) => `${cred.phone}:${cred.password}`)
         .join('\n');
 
+// Joins all types as plain lines with no section headers
 const generateAllContent = (credentials, types) =>
     types
-        .map((type) => {
-            const lines = generateTypeContent(credentials, type);
-            return lines ? `=== Type ${type} ===\n${lines}` : null;
-        })
+        .map((type) => generateTypeContent(credentials, type))
         .filter(Boolean)
-        .join('\n\n');
+        .join('\n');
 
 export default function ValidPhoneNumber() {
     const theme = useTheme();

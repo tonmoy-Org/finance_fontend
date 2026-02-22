@@ -61,7 +61,6 @@ import { Helmet } from 'react-helmet-async';
 
 const MAX_NUMBERS_PER_UPLOAD = 100;
 
-// Fetch ALL numbers (no server-side pagination) so we can group + paginate by country code client-side
 const fetchPhoneNumbers = async ({ queryKey }) => {
     const [, , , search] = queryKey;
     const params = new URLSearchParams({ page: 1, limit: 9999, search: search || '' });
@@ -133,47 +132,154 @@ function CountryCodeRow({
     const allSelected = groupIds.length > 0 && groupIds.every(id => selectedRows.includes(id));
     const someSelected = selectedRows.some(id => groupIds.includes(id)) && !allSelected;
 
+    // Compute active/inactive counts
+    const activeCount = group.items.filter(i => i.is_active).length;
+    const inactiveCount = group.items.length - activeCount;
+
+    const handleRowClick = (e) => {
+        // Prevent toggle if clicking on checkbox or action buttons
+        if (
+            e.target.closest('input[type="checkbox"]') ||
+            e.target.closest('button') ||
+            e.target.closest('.MuiCheckbox-root') ||
+            e.target.closest('.MuiIconButton-root')
+        ) return;
+        setOpen(o => !o);
+    };
+
     return (
         <>
-            <TableRow sx={{
-                backgroundColor: alpha(BLUE, theme.palette.mode === 'dark' ? 0.1 : 0.05),
-                '&:hover': { backgroundColor: alpha(BLUE, theme.palette.mode === 'dark' ? 0.15 : 0.08) },
-            }}>
-                <TableCell padding="checkbox" sx={{ pl: 1.5, width: 48 }}>
-                    <Checkbox size="small" checked={allSelected} indeterminate={someSelected}
-                        onChange={() => onSelectAll(groupIds, allSelected)} />
+            <TableRow
+                onClick={handleRowClick}
+                sx={{
+                    cursor: 'pointer',
+                    backgroundColor: alpha(BLUE, theme.palette.mode === 'dark' ? 0.1 : 0.05),
+                    '&:hover': {
+                        backgroundColor: alpha(BLUE, theme.palette.mode === 'dark' ? 0.18 : 0.1),
+                    },
+                    transition: 'background-color 0.15s ease',
+                    userSelect: 'none',
+                }}
+            >
+                {/* Checkbox cell — stop propagation so clicking checkbox doesn't toggle row */}
+                <TableCell
+                    padding="checkbox"
+                    sx={{ pl: 1.5, width: 48 }}
+                    onClick={e => e.stopPropagation()}
+                >
+                    <Checkbox
+                        size="small"
+                        checked={allSelected}
+                        indeterminate={someSelected}
+                        onChange={() => onSelectAll(groupIds, allSelected)}
+                    />
                 </TableCell>
+
+                {/* Main info cell */}
                 <TableCell sx={{ py: 1 }}>
-                    <Box display="flex" alignItems="center" gap={1}>
-                        <IconButton size="small" onClick={() => setOpen(o => !o)}
-                            sx={{ p: 0.3, color: alpha(TEXT, 0.5) }}>
+                    <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
+                        <IconButton
+                            size="small"
+                            onClick={e => { e.stopPropagation(); setOpen(o => !o); }}
+                            sx={{ p: 0.3, color: alpha(TEXT, 0.5) }}
+                        >
                             {open
                                 ? <KeyboardArrowUpIcon sx={{ fontSize: '1rem' }} />
                                 : <KeyboardArrowDownIcon sx={{ fontSize: '1rem' }} />}
                         </IconButton>
-                        <Chip label={group.country_code} size="small" sx={{
-                            backgroundColor: alpha(BLUE, 0.12),
-                            color: BLUE,
-                            fontWeight: 700,
-                            fontSize: '0.78rem',
-                            height: 24,
-                            borderRadius: '6px',
-                        }} />
-                        <Typography variant="caption" sx={{ color: alpha(TEXT, 0.6), fontSize: '0.78rem', ml: 1 }}>
-                            {group.items.length} number{group.items.length !== 1 ? 's' : ''}
-                        </Typography>
+
+                        {/* Country code chip */}
+                        <Chip
+                            label={group.country_code}
+                            size="small"
+                            sx={{
+                                backgroundColor: alpha(BLUE, 0.12),
+                                color: BLUE,
+                                fontWeight: 700,
+                                fontSize: '0.78rem',
+                                height: 24,
+                                borderRadius: '6px',
+                            }}
+                        />
+
+                        {/* Total count */}
+                        <Chip
+                            size="small"
+                            label={`${group.items.length} Total`}
+                            sx={{
+                                height: 20,
+                                borderRadius: '4px',
+                                fontSize: '0.7rem',
+                                fontWeight: 600,
+                                backgroundColor: alpha(TEXT, 0.08),
+                                color: TEXT,
+                                border: `1px solid ${alpha(TEXT, 0.2)}`,
+                                '& .MuiChip-label': { px: 0.7 },
+                            }}
+                        />
+
+                        {/* Active badge */}
+                        {activeCount > 0 && (
+                            <Chip
+                                size="small"
+                                icon={<CheckCircleIcon sx={{ fontSize: '0.65rem !important' }} />}
+                                label={`${activeCount} Active`}
+                                sx={{
+                                    height: 20,
+                                    borderRadius: '4px',
+                                    fontSize: '0.7rem',
+                                    fontWeight: 600,
+                                    backgroundColor: alpha(GREEN, 0.1),
+                                    color: GREEN,
+                                    border: `1px solid ${alpha(GREEN, 0.3)}`,
+                                    '& .MuiChip-label': { px: 0.7 },
+                                    '& .MuiChip-icon': { ml: 0.5 },
+                                }}
+                            />
+                        )}
+
+                        {/* Inactive badge */}
+                        {inactiveCount > 0 && (
+                            <Chip
+                                size="small"
+                                icon={<BlockIcon sx={{ fontSize: '0.65rem !important' }} />}
+                                label={`${inactiveCount} Inactive`}
+                                sx={{
+                                    height: 20,
+                                    borderRadius: '4px',
+                                    fontSize: '0.7rem',
+                                    fontWeight: 600,
+                                    backgroundColor: alpha(RED, 0.08),
+                                    color: RED,
+                                    border: `1px solid ${alpha(RED, 0.25)}`,
+                                    '& .MuiChip-label': { px: 0.7 },
+                                    '& .MuiChip-icon': { ml: 0.5 },
+                                }}
+                            />
+                        )}
                     </Box>
                 </TableCell>
+
                 <TableCell colSpan={3} />
-                <TableCell align="right" sx={{ pr: 1.5, py: 0.8 }}>
-                    <Tooltip title={`Delete all ${group.items.length} number${group.items.length !== 1 ? 's' : ''} in ${group.country_code}`} placement="top">
-                        <IconButton size="small" onClick={() => onDeleteGroup(group)}
-                            sx={{ color: RED, width: 28, height: 28, '&:hover': { backgroundColor: alpha(RED, 0.1) } }}>
+
+                {/* Delete group action */}
+                <TableCell align="right" sx={{ pr: 1.5, py: 0.8 }} onClick={e => e.stopPropagation()}>
+                    <Tooltip
+                        title={`Delete all ${group.items.length} number${group.items.length !== 1 ? 's' : ''} in ${group.country_code}`}
+                        placement="top"
+                    >
+                        <IconButton
+                            size="small"
+                            onClick={() => onDeleteGroup(group)}
+                            sx={{ color: RED, width: 28, height: 28, '&:hover': { backgroundColor: alpha(RED, 0.1) } }}
+                        >
                             <DeleteSweepIcon sx={{ fontSize: '0.9rem' }} />
                         </IconButton>
                     </Tooltip>
                 </TableCell>
             </TableRow>
+
+            {/* Collapsible detail rows */}
             <TableRow>
                 <TableCell colSpan={7} sx={{ p: 0, border: 0 }}>
                     <Collapse in={open} timeout="auto" unmountOnExit>
@@ -182,14 +288,17 @@ function CountryCodeRow({
                                 <TableRow sx={{ backgroundColor: alpha(BLUE, theme.palette.mode === 'dark' ? 0.04 : 0.02) }}>
                                     <TableCell padding="checkbox" sx={{ pl: 1.5, width: 48, py: 0.8, borderBottom: `1px solid ${alpha(BLUE, 0.2)}` }} />
                                     {['Phone Number', 'Browser Reset', 'Password Formatters', 'Status', 'Actions'].map((label, i) => (
-                                        <TableCell key={label} align={i === 4 ? 'right' : 'left'}
+                                        <TableCell
+                                            key={label}
+                                            align={i === 4 ? 'right' : 'left'}
                                             sx={{
                                                 py: 0.9, fontSize: '0.78rem', fontWeight: 700,
                                                 color: TEXT,
                                                 borderBottom: `1px solid ${alpha(BLUE, 0.2)}`,
                                                 pl: i === 0 ? 5.5 : undefined,
                                                 pr: i === 4 ? 1.5 : undefined,
-                                            }}>
+                                            }}
+                                        >
                                             {label}
                                         </TableCell>
                                     ))}
@@ -199,12 +308,16 @@ function CountryCodeRow({
                                 {group.items.map(item => {
                                     const isSelected = selectedRows.includes(item._id);
                                     return (
-                                        <TableRow key={item._id} hover selected={isSelected}
+                                        <TableRow
+                                            key={item._id}
+                                            hover
+                                            selected={isSelected}
                                             sx={{
                                                 opacity: deletingId === item._id ? 0.4 : 1,
                                                 transition: 'opacity 0.2s',
                                                 '&.Mui-selected': { backgroundColor: alpha(BLUE, 0.05) },
-                                            }}>
+                                            }}
+                                        >
                                             <TableCell padding="checkbox" sx={{ pl: 1.5, width: 48 }}>
                                                 <Checkbox size="small" checked={isSelected}
                                                     onChange={() => onSelectRow(item._id)} />
@@ -392,18 +505,10 @@ function DuplicateNumbersWarning({ duplicates, onRemoveAll, onKeepAll }) {
                     </Box>
                 </Box>
                 <Box display="flex" gap={1} justifyContent="flex-end">
-                    <OutlineButton
-                        size="small"
-                        onClick={onRemoveAll}
-                        sx={{ fontSize: '0.75rem', py: 0.5 }}
-                    >
+                    <OutlineButton size="small" onClick={onRemoveAll} sx={{ fontSize: '0.75rem', py: 0.5 }}>
                         Remove All Duplicates
                     </OutlineButton>
-                    <GradientButton
-                        size="small"
-                        onClick={onKeepAll}
-                        sx={{ fontSize: '0.75rem', py: 0.5 }}
-                    >
+                    <GradientButton size="small" onClick={onKeepAll} sx={{ fontSize: '0.75rem', py: 0.5 }}>
                         Keep All (Will Fail)
                     </GradientButton>
                 </Box>
@@ -440,33 +545,16 @@ function BulkUploadErrorDetails({ errors, onRetry, onClear }) {
             </Box>
             <Box sx={{ maxHeight: 250, overflowY: 'auto' }}>
                 {errors.map((error, index) => (
-                    <Box
-                        key={index}
-                        sx={{
-                            p: 1.5,
-                            borderBottom: index < errors.length - 1 ? `1px solid ${alpha(RED, 0.1)}` : 'none',
-                            backgroundColor: index % 2 === 0 ? alpha(RED, 0.02) : 'transparent',
-                        }}
-                    >
+                    <Box key={index} sx={{
+                        p: 1.5,
+                        borderBottom: index < errors.length - 1 ? `1px solid ${alpha(RED, 0.1)}` : 'none',
+                        backgroundColor: index % 2 === 0 ? alpha(RED, 0.02) : 'transparent',
+                    }}>
                         <Box display="flex" alignItems="flex-start" gap={1}>
-                            <Typography
-                                sx={{
-                                    fontFamily: 'monospace',
-                                    fontSize: '0.8rem',
-                                    fontWeight: 600,
-                                    color: TEXT,
-                                    minWidth: 100,
-                                }}
-                            >
+                            <Typography sx={{ fontFamily: 'monospace', fontSize: '0.8rem', fontWeight: 600, color: TEXT, minWidth: 100 }}>
                                 {error.number}
                             </Typography>
-                            <Typography
-                                sx={{
-                                    fontSize: '0.78rem',
-                                    color: RED,
-                                    flex: 1,
-                                }}
-                            >
+                            <Typography sx={{ fontSize: '0.78rem', color: RED, flex: 1 }}>
                                 {error.message}
                             </Typography>
                         </Box>
@@ -475,12 +563,8 @@ function BulkUploadErrorDetails({ errors, onRetry, onClear }) {
             </Box>
             <Box sx={{ px: 2, py: 1.5, borderTop: `1px solid ${alpha(RED, 0.15)}`, backgroundColor: alpha(RED, 0.03) }}>
                 <Box display="flex" gap={1} justifyContent="flex-end">
-                    <OutlineButton size="small" onClick={onClear} sx={{ fontSize: '0.75rem' }}>
-                        Clear All
-                    </OutlineButton>
-                    <GradientButton size="small" onClick={onRetry} sx={{ fontSize: '0.75rem' }}>
-                        Retry Failed Numbers
-                    </GradientButton>
+                    <OutlineButton size="small" onClick={onClear} sx={{ fontSize: '0.75rem' }}>Clear All</OutlineButton>
+                    <GradientButton size="small" onClick={onRetry} sx={{ fontSize: '0.75rem' }}>Retry Failed Numbers</GradientButton>
                 </Box>
             </Box>
         </Box>
@@ -528,9 +612,7 @@ export const PhoneNumbers = () => {
 
     useEffect(() => { setSelectedRows([]); }, [page, rowsPerPage, debouncedSearch, statusFilter]);
 
-    const {
-        data: phoneNumbersData, isLoading, isError, error: queryError, refetch,
-    } = useQuery({
+    const { data: phoneNumbersData, isLoading, isError, error: queryError, refetch } = useQuery({
         queryKey: ['phoneNumbers', page, rowsPerPage, debouncedSearch],
         queryFn: fetchPhoneNumbers,
         keepPreviousData: true,
@@ -561,9 +643,7 @@ export const PhoneNumbers = () => {
             setOpenDialog(false);
             resetForm();
         },
-        onError: (err) => {
-            setError(err.response?.data?.message || 'Failed to update phone number');
-        },
+        onError: (err) => { setError(err.response?.data?.message || 'Failed to update phone number'); },
     });
 
     const deleteMutation = useMutation({
@@ -609,18 +689,13 @@ export const PhoneNumbers = () => {
     };
 
     const allPhoneNumbers = phoneNumbersData?.data || [];
-
     const passwordFormatters = formattersData?.data || [];
 
-    // Filter by status client-side
     const filteredNumbers = statusFilter === 'all'
         ? allPhoneNumbers
         : allPhoneNumbers.filter(item => statusFilter === 'active' ? item.is_active : !item.is_active);
 
-    // Group by country code
     const groupedNumbers = groupByCountryCode(filteredNumbers);
-
-    // Paginate groups (not individual numbers)
     const paginatedGroups = groupedNumbers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
     const allVisibleIds = filteredNumbers.map(item => item._id);
@@ -648,7 +723,6 @@ export const PhoneNumbers = () => {
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
-
         if (name === 'numbers' && !selectedNumber) {
             const nums = parseNumbers(value);
             const duplicates = checkForDuplicates(nums);
@@ -706,10 +780,7 @@ export const PhoneNumbers = () => {
     const checkForDuplicates = (numbers) => {
         const seen = new Set();
         const duplicates = new Set();
-        numbers.forEach(num => {
-            if (seen.has(num)) duplicates.add(num);
-            else seen.add(num);
-        });
+        numbers.forEach(num => { if (seen.has(num)) duplicates.add(num); else seen.add(num); });
         return Array.from(duplicates);
     };
 
@@ -740,12 +811,10 @@ export const PhoneNumbers = () => {
         } else {
             const nums = parseNumbers(formData.numbers);
             if (nums.length === 0) { setError('Please enter at least one phone number'); return; }
-
             if (duplicateNumbers.length > 0) {
                 setError(`Please remove duplicate numbers before uploading. Found: ${duplicateNumbers.join(', ')}`);
                 return;
             }
-
             if (nums.length > MAX_NUMBERS_PER_UPLOAD) {
                 setError(`Maximum ${MAX_NUMBERS_PER_UPLOAD} numbers can be uploaded at once. You entered ${nums.length} numbers.`);
                 return;
@@ -753,7 +822,6 @@ export const PhoneNumbers = () => {
 
             setBulkUploadState({ total: nums.length, done: 0 });
             setBulkUploadErrors([]);
-
             const errors = [];
             let succeeded = 0;
 
@@ -767,10 +835,7 @@ export const PhoneNumbers = () => {
                     });
                     succeeded++;
                 } catch (err) {
-                    errors.push({
-                        number: num,
-                        message: err.message || 'Failed to create phone number'
-                    });
+                    errors.push({ number: num, message: err.message || 'Failed to create phone number' });
                 }
                 setBulkUploadState(prev => ({ ...prev, done: prev.done + 1 }));
             }
@@ -792,11 +857,7 @@ export const PhoneNumbers = () => {
     };
 
     const handleRetryFailed = () => { setBulkUploadErrors([]); };
-
-    const handleClearErrors = () => {
-        setBulkUploadErrors([]);
-        setFormData(prev => ({ ...prev, numbers: '' }));
-    };
+    const handleClearErrors = () => { setBulkUploadErrors([]); setFormData(prev => ({ ...prev, numbers: '' })); };
 
     const validateNumbersInput = (numbers) => {
         const nums = parseNumbers(numbers);
@@ -919,15 +980,9 @@ export const PhoneNumbers = () => {
                 overflow: 'auto', mb: 3, position: 'relative', minHeight: 380,
             }}>
                 {isLoading && (
-                    <Box
-                        position="absolute"
-                        top={0} left={0} right={0} bottom={0}
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                        bgcolor="rgba(255, 255, 255, 0.7)"
-                        zIndex={1}
-                    >
+                    <Box position="absolute" top={0} left={0} right={0} bottom={0}
+                        display="flex" alignItems="center" justifyContent="center"
+                        bgcolor="rgba(255, 255, 255, 0.7)" zIndex={1}>
                         <CircularProgress />
                     </Box>
                 )}
@@ -957,7 +1012,6 @@ export const PhoneNumbers = () => {
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            // ✅ Paginate by country code groups — each group = 1 page row
                             paginatedGroups.map(group => (
                                 <CountryCodeRow
                                     key={group.country_code}
@@ -980,7 +1034,6 @@ export const PhoneNumbers = () => {
                     </TableBody>
                 </Table>
 
-                {/* ✅ Pagination counts country code groups, not individual numbers */}
                 <TablePagination
                     rowsPerPageOptions={[5, 10, 25, 50]}
                     component="div"
@@ -1074,9 +1127,7 @@ export const PhoneNumbers = () => {
                                 value={formData.numbers}
                                 onChange={handleInputChange}
                                 disabled={!!bulkUploadState}
-                                placeholder={selectedNumber
-                                    ? '919026935664'
-                                    : `919026935664\n919026935652\n919026033412`}
+                                placeholder={selectedNumber ? '919026935664' : `919026935664\n919026935652\n919026033412`}
                                 multiline minRows={selectedNumber ? 1 : 5} maxRows={12}
                                 size="small"
                                 error={validationWarnings.length > 0 || duplicateNumbers.length > 0}
